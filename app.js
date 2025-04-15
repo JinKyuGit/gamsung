@@ -1,25 +1,28 @@
 const express = require('express');
-const path = require('path');
-
 const app = express();
-const port = 3000;
+const path = require('path');
+const fs = require('fs');
 
-// 하드코딩된 이미지 배열 (서버에 이미 업로드된 이미지 경로들)
-const images = [
-  { src: '/uploads/1.png', title: '사진 1' },
-  { src: '/uploads/2.png', title: '사진 2' },
-];
+app.use(express.static('public'));
 
-// 뷰 엔진 설정
 app.set('view engine', 'ejs');
-app.use(express.static('public')); // 정적 파일 제공
 
-// 홈 페이지
+// 이미지 자동 로딩
 app.get('/', (req, res) => {
-  res.render('index', { images });  // 이미지 배열을 템플릿에 전달
+  const uploadDir = path.join(__dirname, 'public', 'uploads');
+
+  const images = fs.readdirSync(uploadDir)
+    .filter(file => /\.(png|jpg|jpeg|gif)$/i.test(file)) // 이미지 파일만
+    .map(file => ({
+      src: `/uploads/${file}`,
+      title: file.replace(/\.[^/.]+$/, '') // 확장자 제거해서 제목으로
+    }));
+
+  res.render('index', { images });
 });
 
 // 서버 실행
-app.listen(port, () => {
-  console.log(`서버가 http://localhost:${port}에서 실행 중입니다.`);
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`서버가 http://localhost:${PORT}에서 실행 중입니다.`);
 });
